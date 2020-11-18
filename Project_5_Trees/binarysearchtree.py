@@ -10,24 +10,25 @@ class Node:
         self.data = data
         self.left_child = left_child
         self.right_child = right_child
+        self.height = 0
 
     def is_leaf(self):
-        '''returns True if node is a leaf in the binary tree'''
+        '''returns True if node doesnt have children'''
         return self.left_child is None and self.right_child is None
 
     def update_height(self):
         '''updates the height'''
         if  self.is_leaf():
-            return 0
+            self.height = 0
 
         elif self.left_child is not None and self.right_child is None:
-            return self.left_child.update_height() + 1
+            self.height = self.left_child.update_height() + 1
 
         elif self.right_child is not None and self.left_child is None:
-            return self.right_child.update_height() + 1
+            self.height = self.right_child.update_height() + 1
 
         else:
-            self.height = max(self.left_child.update_height(), self.right_child.update_height())
+            self.height = max(self.left_child.update_height() + 1, self.right_child.update_height() + 1)
 
         return self.height
 
@@ -37,7 +38,13 @@ class Node:
 
     def __str__(self):
         '''returns the nodes data in a string'''
-        return str(self.data)
+        data = str(self.data)
+        height = ' ({0})'.format(self.get_height())
+        leaf = ''
+
+        if self.is_leaf():
+            leaf = ' [leaf]'
+        return data + height + leaf + '\n'
 
 class BinarySearchTree:
     '''Binary Search Tree ADT'''
@@ -52,7 +59,20 @@ class BinarySearchTree:
 
     def __len__(self):
         '''return the umber of items in the tree'''
-        return
+        if self.root is None:
+            return 0
+        else:
+            return 1 + self.__len_helper(self.root.left_child) + self.__len_helper(self.root.right_child)
+
+    def __len_helper(self, cursor):
+        '''recursion helper for self.__len__'''
+        RecursionCounter()
+
+        if cursor is None:
+            return 0
+
+        else:
+            return 1 + self.__len_helper(cursor.left_child) + self.__len_helper(cursor.right_child)
 
     def height(self):
         '''return the height of the tree'''
@@ -61,11 +81,32 @@ class BinarySearchTree:
 
     def __str__(self):
         '''return a string that shows the shape of the three when printed'''
-        return
+        return self.__str_helper(self.root)
 
-    def add(self, item):
+    def __str_helper(self, cursor, tab_count=0):
+        '''recursion helper for self.__str__'''
+        RecursionCounter()
+        tabs = "\t" * (tab_count)
+
+        if cursor is None:
+            return tabs + '[Empty] \n'
+
+        elif cursor.is_leaf():
+            return tabs + str(cursor)
+
+        else:
+            tab_count += 1
+            return tabs + str(cursor) + self.__str_helper(cursor.left_child, tab_count) + self.__str_helper(cursor.right_child, tab_count)
+
+    def add(self, data):
         '''add item to its proper place in the tree'''
-        self.root = self.__add_helper(self.root, item)
+        if isinstance(data, list):
+            for item in data:
+                self.root = self.__add_helper(self.root, item)
+
+        else:
+            self.root = self.__add_helper(self.root, data)
+
         self.root.update_height()
 
     def __add_helper(self, cursor, item):
@@ -73,39 +114,97 @@ class BinarySearchTree:
         RecursionCounter()
 
         if cursor is None:
-            return None
+            return Node(item)
 
         elif cursor.data < item:
             cursor.right_child = self.__add_helper(cursor.right_child, item)
 
-        else:
+        elif cursor.data > item:
             cursor.left_child = self.__add_helper(cursor.left_child, item)
 
         return cursor
 
-    def remove(self, item):
+    def remove(self, data):
         '''remove item from the tree'''
-        self.root = self.__remove_helper(self.root, item)
+        if isinstance(data, list):
+            for item in data:
+                self.__remove_helper(self.root, item)
+
+        else:
+            self.__remove_helper(self.root, data)
+
+        if self.root is not None:
+            self.root.update_height()
 
     def __remove_helper(self, cursor, item):
         '''recursion helper for self.remove'''
         RecursionCounter()
-        return
+
+        if cursor is None:
+            return None
+
+        elif item < cursor.data:
+            cursor.left_child = self.__remove_helper(cursor.left_child, item)
+        elif item > cursor.data:
+            cursor.right_child = self.__remove_helper(cursor.right_child, item)
+
+        else:
+            if cursor.is_leaf():
+                cursor = None
+
+            elif cursor.left_child is not None and cursor.right_child is not None:
+                cursor.data = self.__min_value(cursor.right_child)
+                cursor.right_child = self.__remove_helper(cursor.right_child, cursor.data)
+
+            elif cursor.left_child is None and cursor.right_child is not None:
+                cursor = cursor.right_child
+
+            elif cursor.right_child is None and cursor.left_child is not None:
+                cursor = cursor.left_child
+
+        return cursor
+
+    def __min_value(self, item):
+        """Finds the min value in the tree."""
+        if item.left_child is None:
+            return item.data
+        else:
+            return self.__min_value(item.left_child)
 
     def find(self, item):
         '''return the matched item.  if item is not in the tree, return None'''
-        return
+        return self.__find_helper(self.root, item)
 
     def __find_helper(self, cursor, item):
         '''recursion helper for self.find'''
         RecursionCounter()
-        return
+
+        if cursor is None:
+            return None
+
+        elif cursor.is_leaf():
+            return None
+
+        elif item > cursor.data:
+            return self.__find_helper(cursor.right_child, item)
+
+        elif item < cursor.data:
+            return self.__find_helper(cursor.left_child, item)
+
+        elif item == cursor.data:
+            return cursor
 
     def preorder(self):
         '''return an iterator that preforms an inorder traversal of the tree'''
-        return
+        lyst = []
+        self.__preorder_helper(self.root, lyst)
+        return lyst
 
-    def __preorder_helper(self, cursor, output):
+    def __preorder_helper(self, cursor, lyst):
         '''recursion helper for self.preorder'''
         RecursionCounter()
-        return
+
+        if cursor is not None:
+            lyst.append(cursor.data)
+            self.__preorder_helper(cursor.left_child, lyst)
+            self.__preorder_helper(cursor.right_child, lyst)

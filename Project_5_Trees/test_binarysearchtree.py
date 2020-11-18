@@ -165,5 +165,3 @@ class TestCodeingStandards(unittest.TestCase):
             output = output[15:end]
             score = float(output)
             self.assertGreaterEqual(score, 8.5)
-
-
